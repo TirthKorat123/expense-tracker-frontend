@@ -1,24 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 
-
 export default function ExpenseHistory() {
   const [expenses, setExpenses] = useState([]);
-  console.log(expenses);
-  console.log(expenses.type);
 
   const loadTransactions = () => {
     fetch("http://localhost:5000/transaction")
       .then(res => res.json())
       .then(data => {
         setExpenses(Array.isArray(data) ? data : [data]);
-      });
+      })
+      .catch(err => console.error("Error fetching transactions:", err));
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     loadTransactions();
-  },[]);
-  
+  }, []);
 
   const handleEdit = (id) => {
     alert(`Edit expense with ID: ${id}`);
@@ -31,15 +28,12 @@ export default function ExpenseHistory() {
   return (
     <div className="container mt-4">
       <h2 className="mb-4">Expense History</h2>
-      
-      <button
-        className="btn btn-primary mb-3"
-        onClick={loadTransactions}
-      >
-        Load Transaction History
+
+      <button className="btn btn-primary mb-3" onClick={loadTransactions}>
+        Reload Transactions
       </button>
 
-      {expenses.length > 0 && (
+      {expenses.length > 0 ? (
         <div className="table-responsive">
           <table className="table table-striped table-hover align-middle">
             <thead className="table-dark">
@@ -99,9 +93,7 @@ export default function ExpenseHistory() {
             </tbody>
           </table>
         </div>
-      )}
-
-      {expenses.length === 0 && (
+      ) : (
         <h3>Please Wait !!! Transactions are loading</h3>
       )}
     </div>
