@@ -30,7 +30,7 @@ export default function ExpenseHistory() {
       <h2 className="mb-4">Expense History</h2>
 
       <button className="btn btn-primary mb-3" onClick={loadTransactions}>
-        Reload Transactions
+        Load Transactions
       </button>
 
       {expenses.length > 0 ? (
