@@ -1,18 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { db } from "./firebase";
+import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 
 export default function ExpenseHistory() {
   const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const loadTransactions = () => {
-    fetch("http://localhost:5000/transaction")
-      .then(res => res.json())
-      .then(data => {
-        setExpenses(Array.isArray(data) ? data : [data]);
-      })
-      .catch(err => console.error("Error fetching transactions:", err));
+  // 🔥 Load all transactions from Firestore
+  const loadTransactions = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "transactions"));
+      const data = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(), // here if don't use triple dots then object becomes like   { id: "abc123", data: { title: "Tea", amount: 51 } }
+      }));             // if we use this then it doesn't becomes nested and its like { id: "abc123", title: "Tea", amount: 51 }
+      setExpenses(data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      setLoading(false);
+    }
   };
+  
 
+  // 🧠 Fetch data on page load
   useEffect(() => {
     loadTransactions();
   }, []);
@@ -21,19 +33,24 @@ export default function ExpenseHistory() {
     alert(`Edit expense with ID: ${id}`);
   };
 
-  const handleDelete = (id) => {
-    alert(`Deleted expense with ID: ${id}`);
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this expense?")) {
+      await deleteDoc(doc(db, "transactions", id));
+      loadTransactions(); // refresh after delete
+    }
   };
 
   return (
     <div className="container mt-4">
       <h2 className="mb-4">Expense History</h2>
 
-      <button className="btn btn-primary mb-3" onClick={loadTransactions}>
-        Load Transactions
-      </button>
+      {/* <button className="btn btn-primary mb-3" onClick={loadTransactions}>
+        Reload Transactions
+      </button> */}
 
-      {expenses.length > 0 ? (
+      {loading ? (
+        <h3>Please Wait... Transactions are loading</h3>
+      ) : expenses.length > 0 ? (
         <div className="table-responsive">
           <table className="table table-striped table-hover align-middle">
             <thead className="table-dark">
@@ -48,42 +65,42 @@ export default function ExpenseHistory() {
               </tr>
             </thead>
             <tbody>
-              {expenses.map((item, index) => (
-                <tr key={item.id}>
+              {expenses.map((exp, index) => (
+                <tr key={exp.id}>
                   <td>{index + 1}</td>
-                  <td>{item.title}</td>
-                  <td>{item.category}</td>
+                  <td>{exp.title}</td>
+                  <td>{exp.category}</td>
                   <td>
                     <span
                       className={
-                        item.type === "Income"
+                        exp.type === "Income"
                           ? "badge bg-success"
                           : "badge bg-danger"
                       }
                     >
-                      {item.type}
+                      {exp.type}
                     </span>
                   </td>
                   <td
                     className={
-                      item.type === "Income"
+                      exp.type === "Income"
                         ? "text-success fw-bold"
                         : "text-danger fw-bold"
                     }
                   >
-                    ₹{item.amount}
+                    ₹{exp.amount}
                   </td>
-                  <td>{item.date}</td>
+                  <td>{exp.date}</td>
                   <td>
                     <button
                       className="btn btn-sm btn-warning me-2"
-                      onClick={() => handleEdit(item.id)}
+                      onClick={() => handleEdit(exp.id)}
                     >
                       <FaEdit className="me-1" /> Edit
                     </button>
                     <button
                       className="btn btn-sm btn-danger"
-                      onClick={() => handleDelete(item.id)}
+                      onClick={() => handleDelete(exp.id)}
                     >
                       <FaTrash className="me-1" /> Delete
                     </button>
@@ -94,7 +111,7 @@ export default function ExpenseHistory() {
           </table>
         </div>
       ) : (
-        <h3>Please Wait !!! Transactions are loading</h3>
+        <h3>No transactions found</h3>
       )}
     </div>
   );

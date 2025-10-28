@@ -6,9 +6,9 @@ export default function Dashboard() {
   // const totalBalance = 25000;
   // const totalIncome = 50000;
   // const totalExpenses = 25000;
-  useEffect(() => {
-    loadTransactions();
-  }, []);
+  // useEffect(() => {
+  //   loadTransactions();
+  // }, []);
 
   const [expenses, setExpenses] = useState([]);
   const [totalIncome, setTotalIncome] = useState(0);

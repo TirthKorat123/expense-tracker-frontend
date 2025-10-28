@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "./firebase";
 
 export default function AddExpense() {
   const [form, setForm] = useState({
@@ -19,31 +21,29 @@ export default function AddExpense() {
   };
 
   // Handle form submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     console.log("New Expense Submitted:", form);
     let { title, amount, type, category, date } = form;
 
-    fetch('http://localhost:5000/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        "title": title,
-        "amount": amount,
-        "type": type,
-        "category": category,
-        "date": date
-      })
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
+    try {
+      // Save to Firestore
+      await addDoc(collection(db, "transactions"), {
+        title,
+        amount,
+        type,
+        category,
+        date,
+        createdAt: new Date(), // optional timestamp
       });
+      console.log("Transaction Added!");
 
-    alert("Expense Added!");
+      alert("Expense Added!");
+    } catch (error) {
+      console.error("Error adding transaction: ", error);
+      alert("Failed to add expense, check console.");
+    }
 
     // Reset form after submission
     setForm({
@@ -77,13 +77,13 @@ export default function AddExpense() {
               </div>
 
               <div className="col-md-6">
-                <label className="form-label">Amount (₹)</label> 
+                <label className="form-label">Amount (₹)</label>
                 <input
                   type="number"
                   className="form-control"
                   placeholder="Enter amount..."
                   name="amount"
-                  value={form.amount || ""} 
+                  value={form.amount || ""}
                   onChange={handleChange}
                   required
                 />
@@ -94,7 +94,7 @@ export default function AddExpense() {
                 <select
                   className="form-select"
                   name="type"
-                  value={form.type || ""}
+                  value={form.type}
                   onChange={handleChange}
                 >
                   <option value="Income">Income</option>
