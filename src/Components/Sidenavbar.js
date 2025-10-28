@@ -1,5 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { signOut } from "firebase/auth";
+import { auth } from "./firebase";
 
 export default function Sidenavbar({ onClose }) {
   return (
@@ -32,8 +34,8 @@ export default function Sidenavbar({ onClose }) {
           </Link>
         </li>
         <li className="nav-item">
-          <Link className="nav-link text-white" to="/" onClick={onClose}>
-            Settings
+          <Link className="nav-link text-danger" onClick={() => signOut(auth)}>
+            Log Out
           </Link>
         </li>
       </ul>

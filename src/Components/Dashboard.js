@@ -1,29 +1,27 @@
 import { useState } from "react";
 import { useEffect } from "react";
+import {collection , getDocs } from "firebase/firestore";
+import { db } from "./firebase";
+
 
 export default function Dashboard() {
-  // Dummy data
-  // const totalBalance = 25000;
-  // const totalIncome = 50000;
-  // const totalExpenses = 25000;
-  // useEffect(() => {
-  //   loadTransactions();
-  // }, []);
+  
 
   const [expenses, setExpenses] = useState([]);
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpense, setTotalExpense] = useState(0);
 
-  const loadTransactions = () => {
-    fetch("http://localhost:5000/transaction")
-      .then(res => res.json())
-      .then(data => {
-        setExpenses(Array.isArray(data) ? data : [data]);
-      });
-
-  };
+  async function getDataFromFirebase() {
+    const querySnapshot=await getDocs(collection(db,"transactions"));
+    const data = querySnapshot.docs.map((doc)=>({
+      id: doc.id,
+      ...doc.data()
+  }));
+  setExpenses(data);
+  }
 
   useEffect(() => {
+    getDataFromFirebase();
     const income = expenses
       .filter(txn => txn.type === "Income")
       .reduce((sum, txn) => sum + Number(txn.amount), 0);
@@ -41,34 +39,10 @@ export default function Dashboard() {
     .sort((a, b) => new Date(b.date) - new Date(a.date)) // sort latest first
     .slice(0, 5);
 
-  // const recentTransactions = [
-  //   {
-  //     id: 1,
-  //     title: "Salary",
-  //     amount: 50000,
-  //     type: "Income",
-  //     date: "2025-07-01",
-  //   }
-  // ];
-
-  //calculate the Income and Expense 
-  // const totalIncome=expenses
-  //   .filter(txn=>txn.type === "Income")
-  //   .reduce((sum,txn)=>sum=sum+txn.amount,0)
-  // const totalExpense=expenses
-  //   .filter(txn=>txn.type === "Expense")
-  //   .reduce((sum,txn)=>sum=sum+txn.amount,0)
   const totalBalance = totalIncome - totalExpense;
   return (
     <div className="container py-4">
       <h2 className="mb-4">Dashboard</h2>
-
-      {/* <button
-        className="btn btn-primary mb-3"
-        onClick={loadTransactions}
-      >
-        Load Transaction History
-      </button> */}
 
       {/* Balance Summary */}
       <div className="alert alert-primary fs-5">
